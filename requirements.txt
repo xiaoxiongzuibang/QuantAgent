@@ -1,0 +1,9 @@
+openai
+tiktoken
+backtrader
+yfinance
+pandas
+numpy
+matplotlib
+gradio>=4.14
+python-dotenv
