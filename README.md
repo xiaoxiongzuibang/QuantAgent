@@ -30,7 +30,7 @@ QuantAgent/
 ### ✅ Step 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/QuantAgent.git
+git clone https://github.com/xiaoxiongzuibang/QuantAgent.git
 ```
 ### ✅ Step 2. Create a virtual environment (recommended)
 ```bash
