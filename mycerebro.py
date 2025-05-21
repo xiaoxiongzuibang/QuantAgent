@@ -2,6 +2,9 @@ import backtrader as bt
 import backtrader.plot as btplot
 
 class MyCerebro(bt.Cerebro):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
     def plot(self, plotter=None, numfigs=1, iplot=True,
              start=None, end=None, width=30, height=10,
              dpi=300, tight=True, use=None, **kwargs):

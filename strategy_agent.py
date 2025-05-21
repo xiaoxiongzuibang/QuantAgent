@@ -3,11 +3,29 @@ import pandas as pd, numpy as np
 import backtrader as bt, yfinance as yf, matplotlib.pyplot as plt
 from openai import OpenAI
 from mycerebro import MyCerebro
+import matplotlib
+matplotlib.use("Agg")  # ✅ 保证使用非 GUI 后端
+import matplotlib.pyplot as plt
+
+plt.show = lambda *args, **kwargs: None
 
 
 
 # ---------- function_call ----------
 functions = [
+    {
+        "name": "plot_stock_chart",
+        "description": "Plot raw price chart for a stock in a given date range",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "ticker": {"type": "string"},
+                "start":  {"type": "string"},
+                "end":    {"type": "string"}
+            },
+            "required": ["ticker", "start", "end"]
+        }
+    },
     {
         "name": "update_strategy_params",
         "description": "Collect/update strategy parameters",
@@ -37,6 +55,30 @@ functions = [
 # ---------- Agent 记忆 ----------
 memory = {"strategy": {k: None for k in
            ("indicator","buy_rule","sell_rule","ticker","start","end")}}
+
+# ---------- 绘制资产价格图像 ----------
+import uuid
+import matplotlib.pyplot as plt
+
+def plot_line_chart(ticker, start, end):
+    try:
+        df = get_cleaned_data(ticker, start, end)
+    except Exception as e:
+        return {"error": str(e)}
+
+    plt.figure(figsize=(10, 4))
+    plt.plot(df.index, df["close"], label=f"{ticker} Close Price", color="blue")
+    plt.title(f"{ticker} Price ({start} to {end})")
+    plt.xlabel("Date")
+    plt.ylabel("Price")
+    plt.grid(True)
+    plt.tight_layout()
+
+    img_path = f"line_{uuid.uuid4().hex[:8]}.png"
+    plt.savefig(img_path)
+    plt.close()
+    return {"image": img_path}
+
 
 # ---------- Backtrader 动态策略 ----------
 def make_bt_strategy(cfg):
@@ -81,6 +123,24 @@ def clean_df(df: pd.DataFrame) -> pd.DataFrame:
     if len(df)<30: raise ValueError("bars<30")
     return df
 
+def get_cleaned_data(ticker: str, start: str, end: str) -> pd.DataFrame:
+    """
+    从缓存中获取清洗过的数据，如果没有则调用 yfinance 下载 + clean_df()
+    """
+    key = f"{ticker}_{start}_{end}"
+    if "cache" not in memory:
+        memory["cache"] = {}
+
+    if key not in memory["cache"]:
+        df = yf.download(ticker, start=start, end=end, auto_adjust=False, progress=False)
+        if df.empty:
+            raise ValueError("No data")
+        df = clean_df(df)  # ✅ 调用你的底层函数
+        memory["cache"][key] = df
+
+    return memory["cache"][key]
+
+
 
 def run_backtest(cfg):
     today = dt.date.today().strftime("%Y-%m-%d")
@@ -119,6 +179,7 @@ def update_strategy_params(**kwargs):
 
 # ---------- OpenAI API ----------
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 def gpt(msgs: list) -> str:
     return client.chat.completions.create(
         model="gpt-4o",
