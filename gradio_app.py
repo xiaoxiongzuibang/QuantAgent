@@ -1,43 +1,73 @@
 import gradio as gr
 import json
-from strategy_agent import *
+from strategy_agent import gpt, plot_line_chart, get_metrics, update_strategy_params, run_backtest
 
-system_prompt = {"role": "system", "content": "You are a quant trading assistant."}
+# Define your system prompt here:
+SYSTEM_PROMPT = {"role": "system", "content": "You are a quant trading assistant."}
 
 def chat(user_input, history):
-    history_openai = [system_prompt] + history + [{"role": "user", "content": user_input}]
-    assistant = gpt(history_openai)
-    reply = assistant.content
-    image = None
-    updated_history = history + [
-        {"role": "user", "content": user_input},
-        {"role": "assistant", "content": reply},
-    ]
+    # Build the OpenAI messages list
+    messages = [SYSTEM_PROMPT] + history + [{"role": "user", "content": user_input}]
+    updated_history = history + [{"role": "user", "content": user_input}]
 
-    if assistant.function_call:
+    image = None
+    metrics_table = None
+
+    # First call
+    assistant = gpt(messages)
+    if assistant.content:
+        updated_history.append({"role": "assistant", "content": assistant.content})
+
+    # Handle any function calls (chain-call)
+    while assistant.function_call:
         fn = assistant.function_call.name
         args = json.loads(assistant.function_call.arguments or "{}")
 
         if fn == "plot_stock_chart":
-            res = plot_line_chart(**args)  # ✅ 用简单折线图代替蜡烛图
-            reply = "✅ Chart generated." if "image" in res else res.get("error", "Failed.")
-            updated_history[-1]["content"] = reply
-            return updated_history, res.get("image")
+            res = plot_line_chart(**args)
+            image = res.get("image")
 
-    return updated_history, image
+        elif fn == "get_metrics":
+            res = get_metrics(**args)
+            if "error" not in res:
+                metrics_table = [[k, v] for k, v in res.items()]
+
+        elif fn == "update_strategy_params":
+            res = update_strategy_params(**args)
+
+        elif fn == "run_backtest":
+            res = run_backtest(args["strategy"])
+            image = res.get("image")
+
+        # Tell the model what the function returned
+        messages.append({
+            "role": "function",
+            "name": fn,
+            "content": json.dumps(res, ensure_ascii=False)
+        })
+
+        # Run GPT again to see if it wants another call or a final reply
+        assistant = gpt(messages)
+        if assistant.content:
+            updated_history.append({"role": "assistant", "content": assistant.content})
+
+    return updated_history, image, metrics_table
 
 
-with gr.Blocks(title="量化策略助手") as demo:
-    gr.Markdown("## 📈 量化策略助手 – 自然语言生成策略 + 回测")
+with gr.Blocks(title="Quant Strategy Assistant") as demo:
+    gr.Markdown("## 📈 Quant Strategy Assistant")
 
-    with gr.Row(equal_height=True):
+    with gr.Row():
         with gr.Column(scale=2):
-            chatbot = gr.Chatbot(label="对话", height=500, type="messages")
-            msg = gr.Textbox(placeholder="请输入策略描述...", show_label=False)
+            chatbot = gr.Chatbot(type="messages", label="Chat history")
+            userbox = gr.Textbox(placeholder="Enter your strategy or request…", show_label=False)
         with gr.Column(scale=1):
-            image = gr.Image(label="📊 Chart", type="filepath", height=300)
-    
-    msg.submit(fn=chat, inputs=[msg, chatbot], outputs=[chatbot, image])
-    gr.Button("🗑️ 清除对话").click(lambda: ([], None), outputs=[chatbot, image])
+            image   = gr.Image(label="📊 Chart", type="filepath")
+            metrics = gr.Dataframe(label="📈 Metrics", headers=["Metric", "Value"], interactive=False)
+
+    # Wire up submit & clear
+    userbox.submit(chat, inputs=[userbox, chatbot], outputs=[chatbot, image, metrics])
+    gr.Button("🗑️ Clear").click(lambda: ([], None, None), outputs=[chatbot, image, metrics])
 
 demo.launch()
+
