@@ -6,15 +6,19 @@ from agents.plot import *
 from agents.backtest import *
 from agents.memory import *
 
-mcp = FastMCP("quant-agent")  # Claude Desktop 显示的工具名
+mcp = FastMCP("quant-agent")
 
-# ① 画图工具
+@mcp.tool()
+def get_asset_price_data(ticker: str, start: str, end: str):
+    """Get assets' price pandas DataFrame"""
+    res = get_res_data(ticker, start, end)
+    return clean_df(res)
+
 @mcp.tool()
 def plot_chart(ticker: str, start: str, end: str):
-    """画出股票收盘线图"""
+    """Get Assets/ price chart"""
     return plot_line_chart(ticker, start, end)
 
-# ② 指标分析工具
 @mcp.tool()
 def get_stock_metrics(ticker: str, start: str, end: str):
     """计算 Sharpe、波动率、回撤、收益率等"""
@@ -42,5 +46,4 @@ def run_strategy_backtest():
 
 # 启动 MCP 服务器
 if __name__ == "__main__":
-    mcp.run()
-                       # 一行即可：默认使用 STDIO 通道
+    mcp.run("stdio")

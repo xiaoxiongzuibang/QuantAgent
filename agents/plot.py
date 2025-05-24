@@ -1,7 +1,10 @@
 from .data import *
 import uuid
 from .memory import memory
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
 
 def plot_line_chart(ticker: str, start: str, end: str) -> dict:
     try:

@@ -1,3 +1,0 @@
-servers:
-  - id: "quant-agent"
-    exec: "python mcp_servers/market_data/server.py"

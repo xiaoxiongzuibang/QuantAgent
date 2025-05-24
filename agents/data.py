@@ -1,14 +1,11 @@
 import numpy as np, yfinance as yf, pandas as pd
 from .memory import memory
 
-def get_stock_stats_core(ticker: str, start: str, end: str) -> dict:
-    """
-    获取某支股票在指定时间段内的收盘价的描述统计
-    """
+def get_res_data(ticker: str, start: str, end: str) -> pd.Series:
     df = yf.download(ticker, start=start, end=end)
     if df.empty:
         return {"error": "找不到该股票或时间段无数据"}
-    return df["Adj Close"].describe().to_dict()
+    return df
 
 def clean_df(df: pd.DataFrame) -> pd.DataFrame:
     """
