@@ -1,78 +1,87 @@
 # mcp_servers/market_data/server.py
 from typing import Optional, Dict, Any
 from fastmcp import FastMCP
-from agent_core.data import *
-from agent_core.plot import *
-from agent_core.strategy import *
-from agent_core.backtest import *
-from agent_core.memory import *
-from agent_core.dyn_loader import register_dynamic_strategy
-from agent_core.backtest_bt import run_bt_backtest
+import pandas as pd
+
+from agent_core.data.price_data import *
+from agent_core.data.fundamental_data import *
+from agent_core.data.macro_data import *
+
+from agent_core.factors.tech_factors import *
+from agent_core.factors.fundamental_factors import *
+from agent_core.backtest.factor_backtest import *
 
 mcp = FastMCP("quant-agent")
 
 @mcp.tool()
-def get_asset_price_data(ticker: str, start: str, end: str):
-    """Get assets' price pandas DataFrame"""
-    res = get_res_data(ticker, start, end)
-    return clean_df(res)
-
-
-@mcp.tool()
-def get_stock_metrics(ticker: str, start: str, end: str):
-    """计算 Sharpe、波动率、回撤、收益率等"""
-    return get_metrics(ticker, start, end)
+def download_prices(tickers: list[str], start: str, end: str):
+    """下载价格数据（支持多支资产）"""
+    df = get_res_data(tickers, start, end)
+    return df.tail().to_dict()
 
 @mcp.tool()
-def update_params(
-    indicator: str = "",
-    buy_rule: str = "",
-    sell_rule: str = "",
-    ticker: str = "",
-    start: str = "",
-    end: str = ""
-):
-    """更新当前策略配置参数"""
-    args = {k: v for k, v in locals().items() if v}
-    return update_strategy_params(**args)
+def compute_rsi(ticker: str, start: str, end: str, window: int = 14):
+    """计算 RSI 技术指标"""
+    df = get_res_data(ticker, start, end)
+    rsi = calc_rsi(df["close"], window)
+    return rsi.dropna().to_dict()
 
 @mcp.tool()
-def trend_backtest(ticker: str, start: str, end: str,
-                   fast: int = 20, slow: int = 100, fee: float = 0.0005):
-    """
-    趋势跟踪回测：返回 stats + 图片
-    """
-    res = run_trend_backtest(ticker, start, end, fast, slow, fee)
-    img = plot_equity_signals(res, ticker)
-    res["image"] = img
-    return res
+def compute_macd(ticker: str, start: str, end: str):
+    """计算 MACD 技术指标"""
+    df = get_res_data(ticker, start, end)
+    macd = calc_macd(df["close"])
+    return macd.dropna().to_dict(orient="list")
 
 @mcp.tool()
-def create_strategy(name: str, code: str):
-    """
-    动态创建 Backtrader 策略
-    """
-    try:
-        msg = register_dynamic_strategy(name, code)
-        return {"status": "success", "msg": msg}
-    except Exception as e:
-        return {"status": "error", "msg": str(e)}
+def simple_backtest(ticker: str, start: str, end: str):
+    """示例回测：用动量因子构建组合回测"""
+    price_df = get_res_data(ticker, start, end)
+    momentum = calc_momentum(price_df["close"])
+    momentum.name = "score"
+
+    factor = momentum.dropna()
+    factor.index = pd.MultiIndex.from_product([[i.strftime("%Y-%m-%d") for i in factor.index], [ticker]])
+
+    # reshape price to multiindex
+    price_df.columns = pd.MultiIndex.from_product([[col for col in price_df.columns], [ticker]])
+
+    nav = backtest_equal_weight(factor, price_df)
+    return nav.to_dict()
 
 @mcp.tool()
-def backtest_strategy(
-    ticker: str,
-    start: str,
-    end: str,
-    method: str = "sma",
-    cash: float = 100_000,
-    params: Optional[Dict[str, Any]] = None   # ← 显式声明
-):
-    """
-    通用 Backtrader 回测：params 里放策略超参
-    """
-    if params is None:
-        params = {}
-    return run_bt_backtest(ticker, start, end, method, cash, **params)
+def get_fundamental_data(tickers: list[str]):
+    """获取基本面数据（最近一期年报 + TTM）"""
+    df = get_fundamentals(tickers)
+    return df.to_dict()
+
+@mcp.tool()
+def compute_book_to_price(tickers: list[str]):
+    """计算 B/P 基本面因子"""
+    df = get_fundamentals(tickers)
+    factor = calc_book_to_price(df)
+    return factor.to_dict()
+
+@mcp.tool()
+def compute_pe_inverse(tickers: list[str]):
+    """计算 E/P 基本面因子"""
+    df = get_fundamentals(tickers)
+    factor = calc_pe_inverse(df)
+    return factor.to_dict()
+
+@mcp.tool()
+def compute_dividend_yield(tickers: list[str]):
+    """计算股息率因子"""
+    df = get_fundamentals(tickers)
+    factor = calc_dividend_yield(df)
+    return factor.to_dict()
+
+@mcp.tool()
+def compute_roe(tickers: list[str]):
+    """计算 ROE（净资产收益率）"""
+    df = get_fundamentals(tickers)
+    factor = calc_roe(df)
+    return factor.to_dict()
 
 if __name__ == "__main__":
     mcp.run("stdio")
