@@ -14,20 +14,31 @@ This project leverages these ideas to build a programmable framework for factor 
 
 ```
 QuantAgent/
-├── agent_core/
-│   ├── data/                    # Raw data acquisition
-│   │   ├── price_data.py        # Yahoo Finance-based price fetcher
-│   │   └── fundamental_data.py  # Basic financial ratios and statements
-│   ├── factors/                # Factor calculation modules
-│   │   ├── tech_factors.py      # RSI, MACD, momentum, volatility
-│   │   └── fundamental_factors.py # PB, EP, ROE, dividend yield
-│   └── backtest/              # Factor evaluation and simulation
-│       └── factor_backtest.py   # IC calculation, group returns, simple backtest
-├── mcp_servers/               # FastMCP Claude-compatible agent server
-│   └── market_data/
-│       └── server.py           # Tool-registered interface (stdio)
-├── requirements.txt
-└── README.md
+├── agent_core
+│   ├── __init__.py
+│   ├── backtest
+│   │   └── factor_backtest.py
+│   ├── data
+│   │   ├── __init__.py
+│   │   ├── fundamental_data.py
+│   │   ├── macro_data.py
+│   │   └── price_data.py
+│   ├── factors
+│   │   ├── __init__.py
+│   │   ├── fundamental_factors.py
+│   │   └── tech_factors.py
+│   └── plot
+│       ├── __init__.py
+│       ├── backtest_plot.py
+│       └── data_plot.py
+├── chat.py
+├── mcp_server.py
+├── mycerebro.py
+├── openai_agent
+│   ├── __init__.py
+│   └── functions.py
+├── pyproject.toml
+├── README.md
 ```
 
 ---
@@ -85,7 +96,26 @@ Once configured, you can restart Claude Desktop and Claude will automatically lo
 
 ---
 
-## 🧪 Example Use Cases in Claude
+## 🤖 Using the OpenAI CLI to Run the Factor Investment Agent
+
+You can interact with this project's `chat.py` script using OpenAI's Function Calling via the command-line interface (CLI).
+
+Make sure the OpenAI CLI is installed:
+
+```bash
+pip install openai
+
+# Set Up Your API Key and add your OpenAI API key to a .env file in the project root:
+echo "OPENAI_API_KEY=sk-xxxxx..." >> .env
+
+# Alternatively, export it directly in the terminal (not recommended for long-term use):
+export OPENAI_API_KEY=sk-xxxxx...
+
+# run the agent:
+python chat.py
+```
+
+## 🧪 Example Use Cases in Claude or OpenAI
 
 Once the agent is connected, you can interact naturally:
 

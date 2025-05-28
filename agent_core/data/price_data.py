@@ -27,7 +27,7 @@ def get_multi_res_data(tickers, start, end):
     return df
 
 
-def get_res_data(tickers: Union[str, List[str]], start: str, end: str) -> pd.DataFrame:
+def get_res_price_data(tickers: Union[str, List[str]], start: str, end: str) -> pd.DataFrame:
     """
     获取一支或多支资产的价格数据（open/high/low/close/volume）
 

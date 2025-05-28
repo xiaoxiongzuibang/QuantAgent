@@ -1,7 +1,7 @@
 import pandas as pd, yfinance as yf
 from typing import List
 
-def get_fundamentals(tickers: List[str]) -> pd.DataFrame:
+def get_fundamental_data(tickers: List[str]) -> pd.DataFrame:
     """
     拉取多支股票最近一期年报 + TTM 估值数据
     返回 DataFrame：
