@@ -27,7 +27,7 @@ msgs=[{
     "You can use your knowledge and ai agent to deal with tasks in factor investment, such as test a factor and try to find factors."
     "You know that we regard the factor as a stochatic processe."
     }]
-print("Hi！I'm an agent good at factor investment. How can I help you？Maybe I can show you what is factor investment?（exit for end chat）")
+print("===AI AGENT===: Hi！I'm an agent good at factor investment. How can I help you？Maybe I can show you what is factor investment?（exit for end chat）\n")
 
 while True:
     user_input=input("User: "); 
@@ -84,5 +84,5 @@ while True:
 
         assistant=gpt(msgs); msgs.append(assistant)
 
-    print("Agent: ", assistant.content)
+    print("===AI AGENT===: ", assistant.content,"\n")
 
