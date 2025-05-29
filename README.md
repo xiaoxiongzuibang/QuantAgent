@@ -84,10 +84,6 @@ To use this project as a Claude-compatible agent via FastMCP, you need to edit y
   }
 }
 ```
-To run the agent:
-```bash
-python server.py # Run this for using OpenAI CLI
-```
 
 ### Notes:
 - `command` is the absolute path to your Python interpreter (usually inside the Conda environment you created).
@@ -121,28 +117,18 @@ python chat.py # run for using OpenAI CLI
 
 Once the agent is connected, you can interact naturally:
 
-- "Download AAPL price data from 2023"
+- "Download the price data of META form 2023-01-01 to 2024-01-01"
+- "Give me the fundamental data of tesla related to income sheet during 2023"
 - "Compute RSI for TSLA"
 - "Use ROE to build a factor and test if it correlates with future return"
-- "Run a simple backtest using momentum on MSFT"
 - "Which stocks among AAPL, TSLA, NVDA have highest dividend yield?"
 
 Claude will internally call tools such as:
 - `download_prices`
+- `get_fundamentals`
 - `compute_rsi`
 - `compute_roe`
 - `simple_backtest`
-
----
-
-## 📈 Roadmap
-
-- [x] Technical and fundamental factor library
-- [x] Basic IC testing and group backtest tools
-- [x] FastMCP Claude integration (stdio)
-- [ ] Add auto-evaluation tool: `run_ic_test`
-- [ ] Plotting and visualization support
-- [ ] GPT function-calling compatibility (OpenAI agent mode)
 
 ---
 
