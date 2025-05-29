@@ -31,8 +31,8 @@ QuantAgent/
 │       ├── __init__.py
 │       ├── backtest_plot.py
 │       └── data_plot.py
-├── chat.py
-├── mcp_server.py
+├── chat.py           # run for using OpenAI CLI
+├── mcp_server.py     # run for using Claude Desktop or Cline
 ├── mycerebro.py
 ├── openai_agent
 │   ├── __init__.py
@@ -50,13 +50,11 @@ QuantAgent/
 conda create -n mcp_env python=3.10 -y
 conda activate mcp_env
 
-# Install dependencies
 git clone https://github.com/xiaoxiongzuibang/QuantAgent.git
 cd QuantAgent
-pip install -r requirements.txt
 
-# Run MCP Agent in stdio mode
-python mcp_servers/market_data/server.py
+# Install dependencies
+pip install -e ".[dev]"
 ```
 
 ---
@@ -86,6 +84,10 @@ To use this project as a Claude-compatible agent via FastMCP, you need to edit y
   }
 }
 ```
+To run the agent:
+```bash
+python server.py # Run this for using OpenAI CLI
+```
 
 ### Notes:
 - `command` is the absolute path to your Python interpreter (usually inside the Conda environment you created).
@@ -99,6 +101,7 @@ Once configured, you can restart Claude Desktop and Claude will automatically lo
 ## 🤖 Using the OpenAI CLI to Run the Factor Investment Agent
 
 You can interact with this project's `chat.py` script using OpenAI's Function Calling via the command-line interface (CLI).
+You can get your OpenAI API keys on its website(usually like "sk-xxxxx").
 
 Make sure the OpenAI CLI is installed:
 
@@ -109,10 +112,9 @@ pip install openai
 echo "OPENAI_API_KEY=sk-xxxxx..." >> .env
 
 # Alternatively, export it directly in the terminal (not recommended for long-term use):
-export OPENAI_API_KEY=sk-xxxxx...
+export OPENAI_API_KEY="sk-xxxxx..."
 
-# run the agent:
-python chat.py
+python chat.py # run for using OpenAI CLI
 ```
 
 ## 🧪 Example Use Cases in Claude or OpenAI
