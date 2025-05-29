@@ -31,8 +31,8 @@ QuantAgent/
 │       ├── __init__.py
 │       ├── backtest_plot.py
 │       └── data_plot.py
-├── chat.py           # run for using OpenAI CLI
-├── mcp_server.py     # run for using Claude Desktop or Cline
+├── chat.py       # run for using OpenAI CLI
+├── server.py     # run for using Claude Desktop or Cline
 ├── mycerebro.py
 ├── openai_agent
 │   ├── __init__.py
