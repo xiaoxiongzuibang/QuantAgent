@@ -60,6 +60,9 @@ from typing import List, Literal, Optional
 #   基础工具函数
 # ============================ #
 def _get_report_by_period(df: pd.DataFrame, period: str) -> pd.Series:
+    if not isinstance(period, str):
+        raise TypeError(f"Invalid period type: {type(period)}. Must be a string like 'latest' or '2023-12-31'.")
+
     if period == "latest":
         return df.iloc[:, 0]
     elif period in df.columns:

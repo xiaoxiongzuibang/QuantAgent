@@ -50,38 +50,40 @@ def simple_backtest(ticker: str, start: str, end: str):
     return nav.to_dict()
 
 @mcp.tool()
-def get_fundamental_data(tickers: list[str]):
-    """获取基本面数据（最近一期年报 + TTM）"""
-    df = get_fundamentals(tickers)
+def income_statement(ticker: str, period: str = "latest") -> dict:
+    """Get income statement for a stock ticker. Period must be 'latest' or a string like '2023-12-31'."""
+    df = get_income_statement(ticker, period)
     return df.to_dict()
 
-@mcp.tool()
-def compute_book_to_price(tickers: list[str]):
-    """计算 B/P 基本面因子"""
-    df = get_fundamentals(tickers)
-    factor = calc_book_to_price(df)
-    return factor.to_dict()
 
 @mcp.tool()
-def compute_pe_inverse(tickers: list[str]):
-    """计算 E/P 基本面因子"""
-    df = get_fundamentals(tickers)
-    factor = calc_pe_inverse(df)
-    return factor.to_dict()
+def balance_sheet(ticker: str, period: str = "latest"):
+    """Get the balance sheet for a stock ticker and a specific period."""
+    df = get_balance_sheet(ticker, period)
+    return df.tail().to_dict()
 
 @mcp.tool()
-def compute_dividend_yield(tickers: list[str]):
-    """计算股息率因子"""
-    df = get_fundamentals(tickers)
-    factor = calc_dividend_yield(df)
-    return factor.to_dict()
+def cashflow_statement(ticker: str, period: str = "latest"):
+    """Get the cashflow statement for a stock ticker and a specific period."""
+    df = get_cashflow_statement(ticker, period)
+    return df.tail().to_dict()
 
 @mcp.tool()
-def compute_roe(tickers: list[str]):
-    """计算 ROE（净资产收益率）"""
-    df = get_fundamentals(tickers)
-    factor = calc_roe(df)
-    return factor.to_dict()
+def valuation_metrics(ticker: str):
+    """Get valuation metrics (e.g., PE ratio, market cap) for a stock."""
+    df = get_valuation_metrics(ticker)
+    return df.tail().to_dict()
+
+@mcp.tool()
+def fundamental_data(
+    tickers: list[str],
+    period: str = "latest",
+    include: list[str] = ["income", "balance", "cashflow", "valuation"]
+):
+    """Get fundamental data (income, balance, cashflow, valuation) for one or more tickers."""
+    df = get_fundamental_data(tickers, period, include)
+    return df.tail().to_dict()
+
 
 if __name__ == "__main__":
     mcp.run("stdio")
