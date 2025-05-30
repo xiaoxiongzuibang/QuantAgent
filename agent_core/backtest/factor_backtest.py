@@ -2,6 +2,22 @@
 import pandas as pd
 import numpy as np
 
+import pandas as pd
+
+def backtest(price_df: pd.DataFrame, weight_df: pd.DataFrame) -> pd.Series:
+    """
+    简单回测：根据每日权重和次日收益率，计算组合净值
+    参数：
+        - price_df: 股票每日收盘价（index 为日期，columns 为股票代码）
+        - weight_df: 每日持仓权重（index 和 columns 同上）
+    返回：
+        - equity_curve: 组合净值曲线
+    """
+    returns = price_df.pct_change().shift(-1)  # shift(-1)：表示用今天的权重去赚明天的钱
+    portfolio_returns = (weight_df * returns).sum(axis=1)
+    equity = (1 + portfolio_returns).cumprod()
+    return equity
+
 
 def calc_ic(factor: pd.Series, future_ret: pd.Series, method: str = "spearman") -> float:
     """

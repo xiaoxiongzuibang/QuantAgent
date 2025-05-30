@@ -1,4 +1,3 @@
-# mcp_servers/market_data/server.py
 from typing import Optional, Dict, Any
 from fastmcp import FastMCP
 import pandas as pd
@@ -9,45 +8,22 @@ from agent_core.data.macro_data import *
 
 from agent_core.factors.tech_factors import *
 from agent_core.factors.fundamental_factors import *
+
+from agent_core.strategy.strategy_builder import *
 from agent_core.backtest.factor_backtest import *
+
+from agent_core.factors.factor_registry import *
+
 
 mcp = FastMCP("quant-agent")
 
+# ===== Data Module =====
 @mcp.tool()
 def download_prices(tickers: list[str], start: str, end: str):
     """下载价格数据（支持多支资产）"""
-    df = get_res_data(tickers, start, end)
+    df = get_res_price_data(tickers, start, end)
     return df.tail().to_dict()
 
-@mcp.tool()
-def compute_rsi(ticker: str, start: str, end: str, window: int = 14):
-    """计算 RSI 技术指标"""
-    df = get_res_data(ticker, start, end)
-    rsi = calc_rsi(df["close"], window)
-    return rsi.dropna().to_dict()
-
-@mcp.tool()
-def compute_macd(ticker: str, start: str, end: str):
-    """计算 MACD 技术指标"""
-    df = get_res_data(ticker, start, end)
-    macd = calc_macd(df["close"])
-    return macd.dropna().to_dict(orient="list")
-
-@mcp.tool()
-def simple_backtest(ticker: str, start: str, end: str):
-    """示例回测：用动量因子构建组合回测"""
-    price_df = get_res_data(ticker, start, end)
-    momentum = calc_momentum(price_df["close"])
-    momentum.name = "score"
-
-    factor = momentum.dropna()
-    factor.index = pd.MultiIndex.from_product([[i.strftime("%Y-%m-%d") for i in factor.index], [ticker]])
-
-    # reshape price to multiindex
-    price_df.columns = pd.MultiIndex.from_product([[col for col in price_df.columns], [ticker]])
-
-    nav = backtest_equal_weight(factor, price_df)
-    return nav.to_dict()
 
 @mcp.tool()
 def income_statement(ticker: str, period: str = "latest") -> dict:
@@ -91,6 +67,22 @@ def macro_data(indicators: list[str], start: str = "2000-01-01", end: str = None
     """
     df = get_macro_dataset(indicators, start, end)
     return df.tail().to_dict()
+
+# ===== Backtest Module =====
+@mcp.tool()
+def run_backtest_with_factor(factor_name: str, stock_universe: list, start_date: str, end_date: str) -> dict:
+    """
+    用指定的因子，在指定股票池和时间范围上进行回测
+    """
+    price_df = get_res_price_data(stock_universe, start=start_date, end=end_date)
+
+    factor_df = get_factor(factor_name, price_df)  # ← 会做 strip + lower + 映射
+
+    signal_df = generate_top_n_signal(factor_df, top_n=10)
+    weight_df = equal_weight(signal_df)
+    equity = backtest(price_df, weight_df)
+
+    return equity.to_dict()
 
 
 

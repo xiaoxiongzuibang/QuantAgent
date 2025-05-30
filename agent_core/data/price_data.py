@@ -88,8 +88,8 @@ def get_res_price_data(tickers: Union[str, List[str]], start: str, end: str) -> 
         df = df[needed]
         df = df.replace([np.inf, -np.inf], np.nan).dropna(how="all")
 
-    if len(df) < 30:
-        raise ValueError("数据不足 30 行")
+    if len(df) == 0:
+        raise ValueError("DataFrame为空，数据下载出现问题，可能是因为yfinance request过多导致。")
 
     return df
 

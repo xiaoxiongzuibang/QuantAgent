@@ -2,6 +2,20 @@
 import pandas as pd
 import numpy as np
 
+def calc_momentum(price_df: pd.DataFrame, window: int = 20) -> pd.Series:
+    """
+    动量因子：当前价格相对于 N 日前的涨幅百分比
+    """
+    momentum = price_df['close'].pct_change(periods=window)
+    return momentum
+
+def calc_volatility(price_df: pd.DataFrame, window: int = 20) -> pd.Series:
+    """
+    波动率因子：过去 N 日的对数收益标准差
+    """
+    log_return = np.log(price_df['close'] / price_df['close'].shift(1))
+    vol = log_return.rolling(window=window).std()
+    return vol
 
 def calc_rsi(close: pd.Series, period: int = 14) -> pd.Series:
     """
@@ -41,18 +55,7 @@ def calc_macd(close: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9)
     })
 
 
-def calc_volatility(close: pd.Series, window: int = 20) -> pd.Series:
-    """
-    波动率因子：过去 N 日的对数收益标准差
-    """
-    log_ret = np.log(close / close.shift(1))
-    vol = log_ret.rolling(window=window).std()
-    return vol
 
 
-def calc_momentum(close: pd.Series, window: int = 20) -> pd.Series:
-    """
-    动量因子：当前价格相对于 N 日前的涨幅百分比
-    """
-    momentum = close / close.shift(window) - 1
-    return momentum
+
+
