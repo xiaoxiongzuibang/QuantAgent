@@ -84,6 +84,15 @@ def fundamental_data(
     df = get_fundamental_data(tickers, period, include)
     return df.tail().to_dict()
 
+@mcp.tool()
+def macro_data(indicators: list[str], start: str = "2000-01-01", end: str = None):
+    """
+    获取指定宏观经济指标数据（如GDP、CPI等）。
+    """
+    df = get_macro_dataset(indicators, start, end)
+    return df.tail().to_dict()
+
+
 
 if __name__ == "__main__":
     mcp.run("stdio")

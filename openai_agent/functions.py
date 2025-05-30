@@ -73,6 +73,23 @@ function_schemas = [
             },
             "required": ["ticker", "start", "end", "df"]
         }
+    },
+    {
+        "name": "macro_data",
+        "description": "Get macroeconomic time series such as GDP, CPI, or unemployment rate.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+            "indicators": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "List of macro indicators (e.g., 'GDP', 'CPI', 'UNRATE')"
+            },
+            "start": {"type": "string", "description": "Start date (YYYY-MM-DD)"},
+            "end": {"type": "string", "description": "End date (YYYY-MM-DD)"}
+            },
+            "required": ["indicators"]
+        }
     }
 
 ]
